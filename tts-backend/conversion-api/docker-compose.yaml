@@ -1,0 +1,88 @@
+services:
+  redis:
+    env_file:
+      - ".env"
+    image: "redis"
+    restart: "unless-stopped"
+    stop_grace_period: "5s"
+    volumes:
+      - "redis:/data"
+  
+  web:
+    build:
+      context: "."
+      args:
+        - "FLASK_ENV=${FLASK_ENV:-production}"
+    depends_on:
+      - "redis"
+    develop:
+      watch:
+        - path: app.py
+          action: rebuild
+        - path: .
+          target: /app/
+          action: sync
+    env_file:
+      - ".env"
+    runtime: nvidia
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              capabilities: [gpu]
+    healthcheck:
+      test: "curl localhost:3040/health"
+      interval: "60s"
+      timeout: "6s"
+      start_period: "6s"
+      retries: 3
+    ports:
+      - 3040:3040
+    restart: "unless-stopped"
+    volumes:
+      - "./public:/app/public"
+
+  worker:
+    build:
+      context: "."
+      args:
+        - "FLASK_ENV=${FLASK_ENV:-production}"
+    command: celery -A app.celery_app worker --pool=solo
+    runtime: nvidia
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              capabilities: [gpu]
+    depends_on:
+      - "redis"
+    env_file:
+      - ".env"
+    restart: "unless-stopped"
+    volumes:
+      - "/var/www/audio:/app/public"
+
+  backend:
+    depends_on: 
+      - redis
+    build: .
+    develop:
+      watch:
+        - path: index.ts
+          target: index.ts
+          action: sync+restart
+          ignore:
+            - node_modules/
+        - action: rebuild
+          path: package.json
+    ports:
+      - 8080:8080
+      - 
+  auth_redis:
+    image: "redis"
+    restart: "unless-stopped"
+    stop_grace_period: "5s"
+volumes:
+  redis: {}

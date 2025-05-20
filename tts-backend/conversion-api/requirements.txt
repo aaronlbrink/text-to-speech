@@ -1,0 +1,19 @@
+# Repository configuration
+--extra-index-url https://pypi.org/simple
+--find-links https://download.pytorch.org/whl/torch/
+
+# Core dependencies with compatible versions
+numpy>=1.20.0,<1.25.0  # Ensuring compatibility with older Python versions
+torch  # Using latest compatible from the custom index
+
+# Allow binary wheels for blis to avoid compilation issues
+# spacy without the no-binary flag
+# spacy>=3.4.0,<3.7.0
+
+kokoro>=0.9.2
+pydub
+soundfile
+flask
+flask-cors
+celery
+redis  # Case doesn't actually matter for package names

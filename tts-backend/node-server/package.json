@@ -1,0 +1,37 @@
+{
+  "name": "tta-backend",
+  "version": "1.0.0",
+  "description": "",
+  "author": "",
+  "license": "",
+  "main": "index.ts",
+  "type": "module",
+  "scripts": {
+    "start": "npx node-dev index.ts"
+  },
+  "dependencies": {
+    "@node-rs/argon2": "^2.0.2",
+    "alt-xsrf": "^1.0.0",
+    "bull": "^4.16.5",
+    "connect-redis": "^8.0.0",
+    "connect-sqlite3": "^0.9.13",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^8.6.0",
+    "express": "^5.0.0",
+    "express-http-proxy": "^2.0.0",
+    "express-session": "^1.18.0",
+    "http-errors": "^2.0.0",
+    "passport": "^0.6.0",
+    "passport-google-oidc": "^0.1.0",
+    "redis": "^4.7.0",
+    "sqlite3": "^5.0.2"
+  },
+  "devDependencies": {
+    "@types/bull": "^3.15.9",
+    "@types/express": "^5.0.1",
+    "node-dev": "^8.0.0",
+    "ts-node": "^10.9.0",
+    "typescript": "^5.8.0"
+  }
+}

@@ -1,0 +1,12 @@
+--extra-index-url https://pypi.org/simple numpy
+--find-links https://download.pytorch.org/whl/torch/
+torch
+# torch==2.6.0+cpu
+spacy --no-binary blis
+kokoro
+pydub
+soundfile
+flask
+flask-cors
+celery
+redis # Was "Redis" idk if this matters

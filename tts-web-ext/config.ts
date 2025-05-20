@@ -1,0 +1,1 @@
+export const SERVER_BASE = "__server_name__";

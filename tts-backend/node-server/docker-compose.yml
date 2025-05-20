@@ -1,0 +1,26 @@
+services:
+  app:
+    depends_on: 
+      - redis
+    build: .
+    develop:
+      watch:
+        - path: index.ts
+          target: index.ts
+          action: sync+restart
+          ignore:
+            - node_modules/
+        - action: rebuild
+          path: package.json
+    ports:
+      - 8080:8080
+      - 
+  node_redis:
+    image: "redis"
+    restart: "unless-stopped"
+    stop_grace_period: "5s"
+    # volumes:
+    #   - "redis:/data"
+  
+# volumes:
+#   redis: {}

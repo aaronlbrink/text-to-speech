@@ -1,0 +1,113 @@
+services:
+  redis:
+    env_file:
+      - "conversion-api/.env"
+    image: "redis"
+    restart: "unless-stopped"
+    stop_grace_period: "5s"
+    volumes:
+      - "redis:/data"
+  
+  generate_audio:
+    build:
+      context: "conversion-api/"
+      args:
+        - "FLASK_ENV=${FLASK_ENV:-production}"
+    depends_on:
+      - "redis"
+    develop:
+      watch:
+        - path: ./conversion-api/
+          target: /app/
+          action: sync+restart
+    env_file:
+      - "conversion-api/.env"
+    runtime: nvidia
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              capabilities: [gpu]
+    healthcheck:
+      test: "curl localhost:3040/health"
+      interval: "60s"
+      timeout: "6s"
+      start_period: "6s"
+      retries: 3
+    ports:
+      - 3040:3040
+    restart: "unless-stopped"
+    volumes:
+      - "./conversion-api/public:/app/public"
+
+  worker:
+    build:
+      context: "conversion-api/"
+      args:
+        - "FLASK_ENV=${FLASK_ENV:-production}"
+    develop:
+      watch:
+        - path: ./conversion-api/
+          target: /app/
+          action: sync+restart
+    command: celery -A app.celery_app worker --pool=solo
+    runtime: nvidia
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              capabilities: [gpu]
+    depends_on:
+      - "redis"
+    env_file:
+      - "conversion-api/.env"
+    restart: "unless-stopped"
+    volumes:
+      - "/var/www/audio:/app/public"
+  
+  # ollama:
+  #   image: ollama/ollama
+  #   runtime: nvidia
+  #   deploy:
+  #     resources:
+  #       reservations:
+  #         devices:
+  #           - driver: nvidia
+  #             capabilities: [gpu]
+  #   ports:
+  #     - 11434:11434
+  #   tty: true
+  #   pull_policy: always
+  #   entrypoint: ["/bin/sh", "/files/run_ollama.sh"]
+  #   restart: "unless-stopped"
+  #   environment:
+  #     - OLLAMA_KEEP_ALIVE=24h
+  #   volumes:
+  #     - "./ollama/.ollama:/root/.ollama"
+  #     - "./ollama/files:/files"
+
+  backend:
+    depends_on: 
+      - node_redis
+      - generate_audio
+    build: node-server/
+    develop:
+      watch:
+        - path: ./node-server/
+          target: /home/node/app/
+          action: sync+restart
+          ignore:
+            - node_modules/
+        - action: rebuild
+          path: ./node-server/package.json
+    ports:
+      - 8080:8080
+  node_redis:
+    image: "redis"
+    restart: "unless-stopped"
+    stop_grace_period: "5s"
+
+volumes:
+  redis: {}
